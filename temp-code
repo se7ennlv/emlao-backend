@@ -1,22 +1,8 @@
 /* eslint-disable prettier/prettier */
-import { IsNotEmpty, IsNotEmptyObject, IsEmail } from 'class-validator';
+export const randomNumber = (min: number, max: number) => {
+    const number = Math.floor(
+        Math.random() * (max - min + 1) + min
+    );
 
-export class Role {
-    @IsNotEmpty()
-    code: string;
-
-    @IsNotEmpty()
-    name: string;
-}
-
-export class CreateAccountDto {
-    @IsNotEmpty()
-    @IsEmail()
-    username: string;
-
-    @IsNotEmpty()
-    password: string;
-
-    @IsNotEmptyObject()
-    role: Role;
+    return number;
 }
