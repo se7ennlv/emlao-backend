@@ -1,81 +1,37 @@
 /* eslint-disable prettier/prettier */
-import { HttpException, Injectable, InternalServerErrorException } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
+import { Account } from 'src/modules/accounts/entities/account.entity';
 import { Model } from 'mongoose';
-import { CreateAccountDto } from './dto/create-account.dto';
-import { Account, AccountDocument } from './entities/account.entity';
-import * as moment from 'moment';
+import { JwtService } from '@nestjs/jwt';
+import { AuthDto } from './dto/auth.dto';
 import * as argon2 from 'argon2';
-import { randomNumber } from 'src/common/utils/utils';
-import { ConflictException, NotFoundException } from '@nestjs/common/exceptions';
-
+import * as moment from 'moment';
+import { AccountsService } from 'src/modules/accounts/accounts.service';
 
 @Injectable()
-export class AccountsService {
+export class AuthService {
   constructor(
-    @InjectModel(Account.name) private accountModel: Model<AccountDocument>
+    private accountService: AccountsService,
+    private jwtService: JwtService
   ) { }
 
 
-  async create(createDto: CreateAccountDto) {
+  async signIn(authDto: AuthDto) {
     try {
-      const isExist = await this.checkAccount(createDto.username);
+      const account = await this.accountService.findOne(authDto.username);
 
-      if (isExist) {
-        throw new ConflictException('ອີເມລນີ້ຖືກນຳໃຊ້ແລ້ວ, ກະລຸນາລອງອີເມລອື່ນ');
-      } else {
-        const now = new Date();
-        const fullDate = moment(now).format('YYYY-MM-DD HH:mm:ss');
-
-        const passwordHash = await argon2.hash(createDto.password);
-        const accountNo = randomNumber(100000000, 999999999);
-        const pin = randomNumber(1000, 9999);
-
-        const create = {
-          accountNo: accountNo,
-          pin: pin,
-          username: createDto.username,
-          password: passwordHash,
-          role: createDto.role,
-          createdAt: moment.utc(fullDate),
-          updatedAt: moment.utc(fullDate)
-        };
-
-        const model = new this.accountModel(create);
-        const result = await model.save();
-      }
-    } catch (error) {
-      if (error.status) {
-        throw new HttpException(error.message, error.status);
+      if (!account) {
+        throw new UnauthorizedException('ບໍ່ພົບທີ່ຢູ່ອີເມລຜູ້ໃຊ້ນີ!');
       }
 
-      throw new InternalServerErrorException('ເກີດຂໍ້ຜິດພາດ!');
-    }
-  }
-
-  async findOne(username: string) {
-    try {
-      const filter = { username: username };
-      const account = await this.accountModel.findOne(filter).select('+password').exec();
-
-      if (account) {
-        return account;
+      const isValidPassword = await argon2.verify(account.password, authDto.password);
+      if (!isValidPassword) {
+        throw new UnauthorizedException('ລະຫັດຜ່ານບໍ່ຖືກຕ້ອງ!');
       }
 
-      throw new NotFoundException('ບໍ່ພົບຂໍ້ມູນ!');
     } catch (error) {
 
     }
   }
-
-  async checkAccount(username: string) {
-    try {
-      const filter = { username: username };
-      const count = await this.accountModel.countDocuments(filter).exec();
-      return count;
-    } catch (error) {
-      throw new InternalServerErrorException('ບໍ່ສາມາດດຳເນີນການໄດ້!');
-    }
-  }
-
 }
