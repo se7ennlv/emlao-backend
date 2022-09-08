@@ -1,37 +1,14 @@
 /* eslint-disable prettier/prettier */
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Account } from 'src/modules/accounts/entities/account.entity';
-import { Model } from 'mongoose';
-import { JwtService } from '@nestjs/jwt';
-import { AuthDto } from './dto/auth.dto';
-import * as argon2 from 'argon2';
-import * as moment from 'moment';
-import { AccountsService } from 'src/modules/accounts/accounts.service';
+import { ApiProperty } from "@nestjs/swagger";
+import { IsNotEmpty } from "class-validator";
+import mongoose from "mongoose";
 
-@Injectable()
-export class AuthService {
-  constructor(
-    private accountService: AccountsService,
-    private jwtService: JwtService
-  ) { }
+export class CreateUserDto {
+    @IsNotEmpty()
+    @ApiProperty()
+    account: mongoose.Types.ObjectId;
 
-
-  async signIn(authDto: AuthDto) {
-    try {
-      const account = await this.accountService.findOne(authDto.username);
-
-      if (!account) {
-        throw new UnauthorizedException('ບໍ່ພົບທີ່ຢູ່ອີເມລຜູ້ໃຊ້ນີ!');
-      }
-
-      const isValidPassword = await argon2.verify(account.password, authDto.password);
-      if (!isValidPassword) {
-        throw new UnauthorizedException('ລະຫັດຜ່ານບໍ່ຖືກຕ້ອງ!');
-      }
-
-    } catch (error) {
-
-    }
-  }
+    @IsNotEmpty()
+    @ApiProperty()
+    name: string;
 }
