@@ -1,14 +1,12 @@
-/* eslint-disable prettier/prettier */
-import { ApiProperty } from "@nestjs/swagger";
-import { IsNotEmpty } from "class-validator";
-import mongoose from "mongoose";
+async findAll(): Promise<Category[]> {
+    try {
+      const populate = { path: 'shop', select: 'name' };
+      const sortBy: any = { name: 1 };
+      const categories = this.categoryModel.find()
+        .populate(populate).sort(sortBy).exec();
 
-export class CreateUserDto {
-    @IsNotEmpty()
-    @ApiProperty()
-    account: mongoose.Types.ObjectId;
-
-    @IsNotEmpty()
-    @ApiProperty()
-    name: string;
-}
+      return categories;
+    } catch (error) {
+      throw new InternalServerErrorException('ບໍ່ສາມາດໂຫຼດຂໍ້ມູນໄດ້!');
+    }
+  }
