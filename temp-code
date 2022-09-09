@@ -1,4 +1,23 @@
-static 400 = 'ການຮ້ອງຂໍບໍ່ຖືກຕ້ອງ!';
-    static 404 = 'ບໍ່ພົບຂໍ້ມູນ!';
-    static 409 = 'ຂໍ້ມູນບໍ່ສາມາດຊ້ຳກັນໄດ້!';
-    static 500 = 'ບໍ່ສາມາດໂຫຼດຂໍ້ມູນໄດ້!';
+async findOne(id: string) {
+    try {
+      if (!isValidObjectId(id)) {
+        throw new BadRequestException(errorMessages[400]);
+      } else {
+        const populate = { path: 'shop', select: 'name' };
+        const category = await this.categoryModel.findById(id)
+          .populate(populate).exec();
+
+        if (category) {
+          return category;
+        }
+
+        throw new NotFoundException(errorMessages[404]);
+      }
+    } catch (error) {
+      if (error.status) {
+        throw new HttpException(error.message, error.status);
+      }
+
+      throw new InternalServerErrorException(errorMessages[500]);
+    }
+  }
