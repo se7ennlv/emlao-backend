@@ -1,23 +1,18 @@
-async findOne(id: string) {
+async remove(id: string): Promise<boolean> {
     try {
       if (!isValidObjectId(id)) {
         throw new BadRequestException(errorMessages[400]);
       } else {
-        const populate = { path: 'shop', select: 'name' };
-        const category = await this.categoryModel.findById(id)
-          .populate(populate).exec();
+        const filter = { _id: id };
+        const resutl = await this.categoryModel.deleteOne(filter).exec();
 
-        if (category) {
-          return category;
+        if (resutl.deletedCount) {
+          return true;
         }
 
-        throw new NotFoundException(errorMessages[404]);
+        return false;
       }
     } catch (error) {
-      if (error.status) {
-        throw new HttpException(error.message, error.status);
-      }
-
       throw new InternalServerErrorException(errorMessages[500]);
     }
   }
