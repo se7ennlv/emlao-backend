@@ -25,8 +25,9 @@ export class ProductsController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.productsService.findOne(+id);
+  async findOne(@Req() req, @Param('id') id: string): Promise<Product> {
+    const user = req.user;
+    return await this.productsService.findOne(id, user);
   }
 
   @Patch(':id')
