@@ -40,17 +40,31 @@ export class ProductsService {
       const model = new this.productModel(create);
       const result = await model.save();
 
-      return result;
+      if (result) {
+        const prodId = (result?._id).toString();
+        const product = await this.findOne(prodId);
+
+        if (!product) {
+          throw new NotFoundException(errorMessages[404]);
+        }
+
+        return product;
+      }
     } catch (error) {
+      if (error.status) {
+        throw new HttpException(error.message, error.status);
+      }
+
       throw new InternalServerErrorException(errorMessages[500]);
     }
   }
 
   async findAll(user: User): Promise<Product[]> {
     try {
+      const populate = { path: 'category', select: '-_id name description', model: 'Category' };
       const shopId = new mongoose.Types.ObjectId(user?._id);
       const filter = { shop: shopId };
-      const products = this.productModel.find(filter).exec();
+      const products = this.productModel.find(filter).populate(populate).exec();
 
       return products;
     } catch (error) {
@@ -63,7 +77,8 @@ export class ProductsService {
       if (!isValidObjectId(id)) {
         throw new BadRequestException(errorMessages[400]);
       } else {
-        const product = await this.productModel.findById(id).exec();
+        const populate = { path: 'category', select: '-_id name description', model: 'Category' };
+        const product = await this.productModel.findById(id).populate(populate).exec();
 
         if (!product) {
           throw new NotFoundException(errorMessages[404]);
@@ -72,6 +87,10 @@ export class ProductsService {
         return product;
       }
     } catch (error) {
+      if (error.status) {
+        throw new HttpException(error.message, error.status);
+      }
+
       throw new InternalServerErrorException(errorMessages[500]);
     }
   }
