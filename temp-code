@@ -1,39 +1,16 @@
 /* eslint-disable prettier/prettier */
-import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import mongoose from "mongoose";
+import { IsNotEmpty } from 'class-validator';
 
-export type ProductDocument = Product & Document;
+export class CreateProductDto {
+    @IsNotEmpty()
+    category: string;
 
-
-@Schema({ collection: 'products', timestamps: false, versionKey: false })
-export class Product {
-    @Prop({ required: true, ref: 'Shop' })
-    shop: mongoose.Types.ObjectId;
-
-    @Prop({ required: true, ref: 'Category' })
-    category: mongoose.Types.ObjectId;
-
-    @Prop({ required: true, trim: true })
-    code: string;
-
-    @Prop({ required: true, trim: true })
+    @IsNotEmpty()
     name: string;
 
-    @Prop({ default: '' })
+    @IsNotEmpty()
     description: string;
 
-    @Prop({ default: 0 })
-    price: mongoose.Schema.Types.Decimal128;
-
-    @Prop({ default: Date.now })
-    createdAt: Date;
-
-    @Prop({ default: Date.now })
-    updatedAt: Date;
-
-    @Prop({ default: 1 })
-    isActive: boolean;
+    @IsNotEmpty()
+    price: number;
 }
-
-
-export const ProductSchema = SchemaFactory.createForClass(Product);
