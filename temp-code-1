@@ -1,16 +1,1 @@
-/* eslint-disable prettier/prettier */
-import { IsNotEmpty } from 'class-validator';
 
-export class CreateProductDto {
-    @IsNotEmpty()
-    category: string;
-
-    @IsNotEmpty()
-    name: string;
-
-    @IsNotEmpty()
-    description: string;
-
-    @IsNotEmpty()
-    price: number;
-}
