@@ -1,7 +1,7 @@
+/* eslint-disable prettier/prettier */
 import { NotFoundException } from '@nestjs/common/exceptions';
 import { errorMessages } from 'src/config/message.config';
 import { randomNumber } from 'src/common/utils/utils';
-/* eslint-disable prettier/prettier */
 import { dateFormat } from 'src/config/date.config';
 import { Injectable, InternalServerErrorException, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
@@ -58,13 +58,12 @@ export class ProductsService {
     }
   }
 
-  async findOne(id: string, user: User) {
+  async findOne(id: string): Promise<Product> {
     try {
       if (!isValidObjectId(id)) {
         throw new BadRequestException(errorMessages[400]);
       } else {
-        const filters = { _id: id, shop: user?._id }
-        const product = await this.productModel.findOne(filters).exec();
+        const product = await this.productModel.findById(id).exec();
 
         if (!product) {
           throw new NotFoundException(errorMessages[404]);
@@ -73,12 +72,33 @@ export class ProductsService {
         return product;
       }
     } catch (error) {
-
+      throw new InternalServerErrorException(errorMessages[500]);
     }
   }
 
-  update(id: number, updateProductDto: UpdateProductDto) {
-    return `This action updates a #${id} product`;
+  async update(id: string, updateDto: UpdateProductDto): Promise<Product> {
+    try {
+      if (!isValidObjectId(id)) {
+        throw new BadRequestException(errorMessages[400]);
+      } else {
+        const now = new Date();
+        const fullDate = moment(now).format(dateFormat.format1);
+
+        const update = { ...updateDto, updatedAt: moment.utc(fullDate) };
+        const filter = { _id: id };
+        const result = await this.productModel.updateOne(filter, update).exec();
+
+        if (result.modifiedCount) {
+          const product = await this.findOne(id);
+
+          if (product) {
+            return product;
+          }
+        }
+      }
+    } catch (error) {
+      throw new InternalServerErrorException(errorMessages[500]);
+    }
   }
 
   remove(id: number) {
