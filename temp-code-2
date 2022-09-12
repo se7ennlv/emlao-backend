@@ -1,7 +1,8 @@
+import { errorMessages } from 'src/config/message.config';
 import { randomNumber } from 'src/common/utils/utils';
 /* eslint-disable prettier/prettier */
 import { dateFormat } from 'src/config/date.config';
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -40,13 +41,20 @@ export class ProductsService {
 
       return result;
     } catch (error) {
-      console.log(error);
-
+      throw new InternalServerErrorException(errorMessages[500]);
     }
   }
 
-  findAll() {
-    return `This action returns all products`;
+  async findAll(user: User) {
+    try {
+      const shopId = new mongoose.Types.ObjectId(user?._id);
+      const filter = { shop: shopId };
+      const products = this.productModel.find(filter).exec();
+
+      return products;
+    } catch (error) {
+      throw new InternalServerErrorException(errorMessages[500]);
+    }
   }
 
   findOne(id: number) {
