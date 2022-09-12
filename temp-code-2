@@ -1,19 +1,21 @@
-/* eslint-disable prettier/prettier */
-import { Module } from '@nestjs/common';
-import { ShopsService } from './shops.service';
-import { ShopsController } from './shops.controller';
-import { MongooseModule } from '@nestjs/mongoose';
-import { Shop, ShopSchema } from './entities/shop.entity';
+import { Injectable, NestInterceptor, ExecutionContext, CallHandler } from '@nestjs/common';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 
-@Module({
-  imports: [
-    MongooseModule.forFeature([{ name: Shop.name, schema: ShopSchema }]),
-  ],
-  controllers: [ShopsController],
-  providers: [ShopsService],
-  exports: [
-    MongooseModule.forFeature([{ name: Shop.name, schema: ShopSchema }]),
-    ShopsService
-  ]
-})
-export class ShopsModule { }
+export interface Response<T> {
+    data: T;
+}
+
+@Injectable()
+export class TransformInterceptor<T> implements NestInterceptor<T, Response<T>> {
+    intercept(context: ExecutionContext, next: CallHandler): Observable<Response<T>> {
+        return next.handle().pipe(
+            map((data) => ({
+                statusCode: context.switchToHttp().getResponse().statusCode,
+                reqId: context.switchToHttp().getRequest().reqId,
+                message: data?.message || 'success',
+                data: data || null,
+            }))
+        );
+    }
+}
