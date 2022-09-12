@@ -25,14 +25,13 @@ export class ProductsController {
   }
 
   @Get(':id')
-  async findOne(@Req() req, @Param('id') id: string): Promise<Product> {
-    const user = req.user;
-    return await this.productsService.findOne(id, user);
+  async findOne(@Param('id') id: string): Promise<Product> {
+    return await this.productsService.findOne(id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateProductDto: UpdateProductDto) {
-    return this.productsService.update(+id, updateProductDto);
+  async update(@Param('id') id: string, @Body() updateDto: UpdateProductDto) {
+    return await this.productsService.update(id, updateDto);
   }
 
   @Delete(':id')
