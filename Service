@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import { NotFoundException } from '@nestjs/common/exceptions';
+import { HttpException, NotFoundException } from '@nestjs/common/exceptions';
 import { errorMessages } from 'src/config/message.config';
 import { randomNumber } from 'src/common/utils/utils';
 import { dateFormat } from 'src/config/date.config';
@@ -91,17 +91,38 @@ export class ProductsService {
         if (result.modifiedCount) {
           const product = await this.findOne(id);
 
-          if (product) {
-            return product;
+          if (!product) {
+            throw new NotFoundException(errorMessages[404]);
           }
+
+          return product;
         }
       }
     } catch (error) {
+      if (error.status) {
+        throw new HttpException(error.message, error.status);
+      }
+
       throw new InternalServerErrorException(errorMessages[500]);
     }
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} product`;
+  async remove(id: string): Promise<boolean> {
+    try {
+      if (!isValidObjectId(id)) {
+        throw new BadRequestException(errorMessages[400]);
+      } else {
+        const filter = { _id: id };
+        const result = await this.productModel.deleteOne(filter).exec();
+
+        if (result.deletedCount) {
+          return true;
+        }
+
+        return false;
+      }
+    } catch (error) {
+      throw new InternalServerErrorException(errorMessages[500]);
+    }
   }
 }
