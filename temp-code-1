@@ -1,1 +1,19 @@
+/* eslint-disable prettier/prettier */
+import { EmployeesService } from './../../modules/employees/employees.service';
+import { CustomersModule } from './../../modules/customers/customers.module';
+import { EmployeesModule } from './../../modules/employees/employees.module';
+import { ShopsModule } from 'src/modules/shops/shops.module';
+import { Module } from '@nestjs/common';
+import { UsersService } from './users.service';
+import { UsersController } from './users.controller';
+import { ShopsService } from 'src/modules/shops/shops.service';
+import { CustomersService } from 'src/modules/customers/customers.service';
 
+
+@Module({
+  imports: [ShopsModule, EmployeesModule, CustomersModule],
+  controllers: [UsersController],
+  providers: [UsersService, ShopsService, EmployeesService, CustomersService],
+  exports: [ShopsService, EmployeesService, CustomersService]
+})
+export class UsersModule { }
