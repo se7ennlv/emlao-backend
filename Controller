@@ -30,12 +30,12 @@ export class ProductsController {
   }
 
   @Patch(':id')
-  async update(@Param('id') id: string, @Body() updateDto: UpdateProductDto) {
+  async update(@Param('id') id: string, @Body() updateDto: UpdateProductDto): Promise<Product> {
     return await this.productsService.update(id, updateDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.productsService.remove(+id);
+  async remove(@Param('id') id: string): Promise<boolean> {
+    return await this.productsService.remove(id);
   }
 }
