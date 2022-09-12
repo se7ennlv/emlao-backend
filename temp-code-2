@@ -1,21 +1,63 @@
-import { Injectable, NestInterceptor, ExecutionContext, CallHandler } from '@nestjs/common';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { randomNumber } from 'src/common/utils/utils';
+/* eslint-disable prettier/prettier */
+import { dateFormat } from 'src/config/date.config';
+import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import mongoose, { Model } from 'mongoose';
+import { CreateProductDto } from './dto/create-product.dto';
+import { UpdateProductDto } from './dto/update-product.dto';
+import { Product, ProductDocument } from './entities/product.entity';
+import * as moment from 'moment';
+import { User } from 'src/core/users/entities/user.entity';
 
-export interface Response<T> {
-    data: T;
-}
 
 @Injectable()
-export class TransformInterceptor<T> implements NestInterceptor<T, Response<T>> {
-    intercept(context: ExecutionContext, next: CallHandler): Observable<Response<T>> {
-        return next.handle().pipe(
-            map((data) => ({
-                statusCode: context.switchToHttp().getResponse().statusCode,
-                reqId: context.switchToHttp().getRequest().reqId,
-                message: data?.message || 'success',
-                data: data || null,
-            }))
-        );
+export class ProductsService {
+  constructor(@InjectModel(Product.name) private productModel: Model<ProductDocument>) { }
+
+
+  async create(createDto: CreateProductDto, user: User) {
+    try {
+      const now = new Date();
+      const fullDate = moment(now).format(dateFormat.format1);
+
+      const categoryId = new mongoose.Types.ObjectId(createDto.category);
+      const prodCode = 'P' + randomNumber(1000, 9999);
+
+      const create = {
+        shop: user?._id,
+        category: categoryId,
+        code: prodCode,
+        name: createDto.name,
+        description: createDto.description,
+        price: createDto.price,
+        createdAt: moment.utc(fullDate),
+        updatedAt: moment.utc(fullDate)
+      };
+
+      const model = new this.productModel(create);
+      const result = await model.save();
+
+      return result;
+    } catch (error) {
+      console.log(error);
+
     }
+  }
+
+  findAll() {
+    return `This action returns all products`;
+  }
+
+  findOne(id: number) {
+    return `This action returns a #${id} product`;
+  }
+
+  update(id: number, updateProductDto: UpdateProductDto) {
+    return `This action updates a #${id} product`;
+  }
+
+  remove(id: number) {
+    return `This action removes a #${id} product`;
+  }
 }
